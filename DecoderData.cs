@@ -1,4 +1,5 @@
 ﻿using Org.BouncyCastle.X509;
+using RPKIdecoder.CrlClass;
 using RPKIdecoder.ExtractEveloped;
 using RPKIdecoder.MftClass;
 using System;
@@ -14,8 +15,8 @@ namespace RPKIdecoder
 
 
     {
-        /* Method that takes an array of bytes of a ROA file and print the decoded content */
-        public static ROA DecodeROA(byte[] roaData)
+        /* Method that takes an array of bytes of a ROA file and returns the decoded content in a class */
+        public static ROA DecodeROA(byte[] fileRoa, byte[] roaData)
         {
             ROA decodedRoa = new ROA();
 
@@ -24,8 +25,10 @@ namespace RPKIdecoder
             int undecodedBit;                          
             int offset = 0;
 
-            decodedRoa.setNumberOfByte(totalByte);
-
+            decodedRoa.setStartDateTime(ExtractEnvelopedData.ExtractStartDateTime(fileRoa));
+            decodedRoa.setEndDateTime(ExtractEnvelopedData.ExtractEndDateTime(fileRoa));
+            decodedRoa.setSerialNumber(ExtractEnvelopedData.ExtractSerialNumber(fileRoa));
+            decodedRoa.setIssuerNumber(ExtractEnvelopedData.ExtractIssuerNumber(fileRoa));
             /***********************************************************************************/
             /******************* DECODING SEQUENCE: ROUTE ORIGIN ADDRESS ***********************/
             /***********************************************************************************/
@@ -107,6 +110,7 @@ namespace RPKIdecoder
                    
                     decodedAddress.setIpAddress(ip);
                     decodedAddress.setNetmask(netMask);
+
                     
 
                     decodedIpAddressBlock.getAddresses().Add(decodedAddress);
@@ -159,14 +163,15 @@ namespace RPKIdecoder
 
 
 
-        public static MFT DecodeMFT(byte[] roaData)
+        public static MFT DecodeMFT(byte[] fileMft,byte[] roaData)
         {
             int offset, length, consumed, decodedByte, numberOfTotalByte, undecodedByte;
             numberOfTotalByte = roaData.Length;
             offset = 0;
 
             MFT decodedMFT = new MFT();
-            decodedMFT.setNumberOfByte(numberOfTotalByte);
+            decodedMFT.setSerialNumber(ExtractEnvelopedData.ExtractSerialNumber(fileMft));
+            decodedMFT.setIssuerNumber(ExtractEnvelopedData.ExtractIssuerNumber(fileMft));
 
             /***********************************************************************************/
             /********************** DECODING SEQUENCE OF MANIFEST BLOCK ************************/
@@ -226,11 +231,25 @@ namespace RPKIdecoder
             return decodedMFT;
         }
 
-        public static X509Crl DecodeCRL(byte[] roaData)
+        public static CRL DecodeCRL(byte[] roaData)
         {
             X509CrlParser crlParser = new X509CrlParser();
-            X509Crl decodedCRL = crlParser.ReadCrl(roaData);
-            return decodedCRL;
+            X509Crl decodedX509Crl = crlParser.ReadCrl(roaData);
+
+            CRL decodedCrl = new CRL();
+            decodedCrl.setIssuerName(decodedX509Crl.IssuerDN.ToString());
+            decodedCrl.setThisUpdate(decodedX509Crl.ThisUpdate);
+            decodedCrl.setNextUpdate(decodedX509Crl.NextUpdate.Value);
+
+            foreach (X509CrlEntry rc in decodedX509Crl.GetRevokedCertificates())
+            {
+                revokedCertificate revokedCertificate = new revokedCertificate();
+                revokedCertificate.setSerialNumber(BigInteger.Parse(rc.SerialNumber.ToString()));
+                revokedCertificate.setRevocationTime(rc.RevocationDate);
+                decodedCrl.getRevokedCertificates().Add(revokedCertificate);
+            }
+
+            return decodedCrl;
         }
 
     }

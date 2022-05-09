@@ -7,7 +7,11 @@ namespace RPKIdecoder
 {
     class ROA
     {
-        private int numberOfByte;
+        private string commonName;
+
+        private BigInteger serialNumber;
+
+        private string issuerNumber;
 
         private BigInteger asNumber;
 
@@ -22,14 +26,19 @@ namespace RPKIdecoder
             ipAddressBlocks = new List<IpAddressBlock>();
         }
 
-        public void setNumberOfByte(int numberOfByte)
+        public void setSerialNumber(BigInteger serialNumber)
         {
-            this.numberOfByte = numberOfByte;
+            this.serialNumber = serialNumber;
         }
 
-        public BigInteger getAsNumber()
+        public void setIssuerNumber(string issuerNumber)
         {
-            return this.numberOfByte;
+            this.issuerNumber = issuerNumber;
+        }
+
+        public string getIssuerNumber()
+        {
+            return this.issuerNumber;
         }
 
         public void setAsNumber(BigInteger asNumber)
@@ -52,14 +61,27 @@ namespace RPKIdecoder
             this.endDateTime = endDate;
         }
 
+        public void setCommonName(String commonName)
+        {
+            this.commonName = commonName;
+        }
+
+        public BigInteger getSerialNumber()
+        {
+            return this.serialNumber;
+        }
+
+
         override
         public string ToString()
         {
             StringBuilder stringa = new StringBuilder();
-            stringa.Append("Number of byte : " + numberOfByte +"\n");
-            stringa.Append("As number : " + asNumber + "\n");
-            stringa.Append("Not Before : " + startDateTime + "\n");
-            stringa.Append("Not After : " + endDateTime + "\n");
+            stringa.Append("Common Name : " + this.commonName + "\n");
+            stringa.Append("Serial number : " + this.serialNumber + "\n");
+            stringa.Append("Issuer Number : " + this.issuerNumber + "\n");
+            stringa.Append("As number : " + this.asNumber + "\n");
+            stringa.Append("Not Before : " + this.startDateTime + "\n");
+            stringa.Append("Not After : " + this.endDateTime + "\n");
             foreach (IpAddressBlock i in ipAddressBlocks)
             {
                 stringa.Append(i.ToString());
